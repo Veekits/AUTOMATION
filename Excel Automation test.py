@@ -3,7 +3,7 @@ from openpyxl import load_workbook
 import re
 
 # Directory containing the Excel files
-base_dir = 'C:/Users/VMUKITA/OneDrive - Goodlife Pharmacy/Desktop/MY PROJECTS/Automation/OUTPUT/Excel Attachments'
+base_dir = 'C:/Users/VMUKITA/OneDrive - Goodlife Pharmacy/Desktop/MY PROJECTS/Automation/AUTOMATION/OUTPUT/Excel Attachments'
 
 def find_code_and_quantity(directory):
     # Create a list to store the file paths
