@@ -8,7 +8,8 @@ def clean_subject(subject):
     cleaned_subject = re.sub(r'[<>:"/\\|?*]', '', subject)
     return cleaned_subject.strip()  # Remove leading and trailing whitespaces
 
-output_dir = Path.cwd() / "OUTPUT"
+output_dir = Path.cwd() / "AUTOMATION"
+output_dir = output_dir/ "OUTPUT"
 output_dir.mkdir(parents=True, exist_ok=True)
 
 excel_attachments_dir = output_dir / "Excel Attachments"

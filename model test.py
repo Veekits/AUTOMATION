@@ -3,7 +3,6 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 import re
 from openpyxl import load_workbook
-from openpyxl.utils.dataframe import dataframe_to_rows
 
 base_dir = 'C:/Users/VMUKITA/OneDrive - Goodlife Pharmacy/Desktop/MY PROJECTS/Automation/AUTOMATION/OUTPUT/Excel Attachments'
 
@@ -21,7 +20,7 @@ def extract_codes_and_quantities(directory):
 
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if file.endswith('.xlsx'):
+            if file.endswith('.xlsx') or file.endswith('.xlsm'):
                 file_path = os.path.join(root, file)
                 file_paths.append(file_path)
 
@@ -30,6 +29,9 @@ def extract_codes_and_quantities(directory):
 
     # Initialize a label encoder for categorical encoding
     label_encoder = LabelEncoder()
+
+    # Flag to indicate if the first folder has been processed
+    first_folder_processed = False
 
     for file_path in file_paths:
         try:
@@ -53,24 +55,47 @@ def extract_codes_and_quantities(directory):
                 non_empty_entries = pd.DataFrame({'Code': [code for code in codes if code is not None],
                                                   'Quantity': [quantity for quantity in quantities if quantity is not None]})
 
-                # Append the results to the DataFrame
+                #Clean folder_name
+                folder_name = os.path.basename(os.path.dirname(file_path))
+                folder_name = re.sub(r'^\d+_', '', folder_name)
+
+                #Append results with folder_name to DataFrame
+                non_empty_entries['Folder_Name'] = folder_name
+                folder_names = []
+                folder_names.append(folder_name)
                 result_df = pd.concat([result_df, non_empty_entries], ignore_index=True)
 
                 # Print the results
-                folder_name = os.path.basename(os.path.dirname(file_path))
                 print(f"Folder: {folder_name}, File: {os.path.basename(file_path)}")
                 for code, quantity in zip(non_empty_entries['Code'], non_empty_entries['Quantity']):
                     print(f"Code: {code}, Quantity: {quantity}")
 
+                # Set the flag to indicate the first folder has been processed
+                first_folder_processed = True
+
         except Exception as e:
             print(f"Error processing {file_path}: {e}")
 
-        book = load_workbook('AUTOMATION/SPECIAL ORDER TEMPLATE.xlsx')
-        sheet = book['order']
+        # Break out of the loop after processing the first folder
+        if first_folder_processed:
+            break
 
-        for rows in dataframe_to_rows(result_df, index=False):
-            sheet.append(rows)
-        book.save('AUTOMATION/SPECIAL ORDER TEMPLATE.xlsx')
+    # Write the results to the Excel file
+    excel_path = 'AUTOMATION/SPECIAL ORDER TEMPLATE.xlsx'
+    wb = load_workbook(excel_path)
+    ws = wb['order']
+
+    # Get the last row in the worksheet
+    last_row = ws.max_row
+
+    # Write the 'Code' column to Column A and 'Quantity' column to Column C
+    for i, (code, quantity, folder_name) in enumerate(result_df[['Code','Quantity', 'Folder_Name']].itertuples(index=False), start=1):
+        ws.cell(row=last_row + i, column=1, value=code)
+        ws.cell(row=last_row + i, column=3, value=quantity)
+        ws.cell(row=last_row + i, column=9, value=folder_name)
+
+    # Save the workbook
+    wb.save(excel_path)
 
 # Call the function with the base directory
 extract_codes_and_quantities(base_dir)
