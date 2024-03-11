@@ -91,11 +91,25 @@ def extract_codes_and_quantities(directory):
     # Write the 'Code' column to Column A and 'Quantity' column to Column C
     for i, (code, quantity, folder_name) in enumerate(result_df[['Code','Quantity', 'Folder_Name']].itertuples(index=False), start=1):
         ws.cell(row=last_row + i, column=1, value=code)
-        ws.cell(row=last_row + i, column=3, value=quantity)
-        ws.cell(row=last_row + i, column=9, value=folder_name)
+        ws.cell(row=last_row + i, column=2, value=quantity)
+        ws.cell(row=last_row + i, column=3, value=folder_name)
 
     # Save the workbook
     wb.save(excel_path)
+
+    file_name = 'AUTOMATION/SPECIAL ORDER TEMPLATE.xlsx'
+
+    order = pd.read_excel(file_name, sheet_name = 'order')
+    details = pd.read_excel(file_name, sheet_name = 'details')
+    whse = pd.read_excel(file_name, sheet_name = 'whse')
+    supp_code = pd.read_excel(file_name, sheet_name = 'supp_code')
+
+    order = pd.merge(order, whse, on = 'STORE NAME')
+    order = pd.merge(order, details, on = 'CODE')
+    order = pd.merge(order, supp_code, on = 'SUPPLIER')
+    order = order.set_index(order.columns[0], drop=True)
+
+    order.to_excel('AUTOMATION/To_order.xlsx')
 
 # Call the function with the base directory
 extract_codes_and_quantities(base_dir)
